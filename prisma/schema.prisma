@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model compra {
+  id_proveedor_insumo Int          @id @default(autoincrement())
+  id_proveedor        Int?
+  id_insumo           Int?
+  comprobante         String       @db.VarChar(50)
+  fecha               DateTime     @db.Date
+  precio              Decimal      @db.Decimal(10, 2)
+  cantidad            Int
+  insumos             insumos?     @relation(fields: [id_insumo], references: [id_insumo], onDelete: NoAction, onUpdate: NoAction)
+  proveedores         proveedores? @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model detalles_ventas {
+  id_producto_venta Int        @id @default(autoincrement())
+  id_producto       Int?
+  id_venta          Int?
+  precio            Decimal    @db.Decimal(10, 2)
+  cantidad          Int
+  productos         productos? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
+  venta             venta?     @relation(fields: [id_venta], references: [id_venta], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model fabricacion {
+  id_producto_insumo Int        @id @default(autoincrement())
+  id_producto        Int?
+  id_insumo          Int?
+  cantidad           Int
+  insumos            insumos?   @relation(fields: [id_insumo], references: [id_insumo], onDelete: NoAction, onUpdate: NoAction)
+  productos          productos? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model horneadas {
+  id_horneada        Int                  @id @default(autoincrement())
+  fecha_inicio       DateTime             @db.Date
+  fecha_fin          DateTime?            @db.Date
+  estado             Int?
+  productosenproceso productosenproceso[]
+}
+
+model insumos {
+  id_insumo    Int           @id @default(autoincrement())
+  detalle      String        @db.VarChar(50)
+  cantidad     Int
+  presentacion String        @db.VarChar(50)
+  precio       Decimal       @db.Decimal(10, 2)
+  compra       compra[]
+  fabricacion  fabricacion[]
+}
+
+model productos {
+  id_producto        Int                  @id @default(autoincrement())
+  detalle            String               @db.VarChar(50)
+  cantidad           Int
+  precio             Decimal              @db.Decimal(10, 2)
+  detalles_ventas    detalles_ventas[]
+  fabricacion        fabricacion[]
+  productosenproceso productosenproceso[]
+}
+
+model productosenproceso {
+  id_producto_en_proceso Int        @id @default(autoincrement())
+  id_producto            Int?
+  id_horneada            Int?
+  cantidad               Int
+  horneadas              horneadas? @relation(fields: [id_horneada], references: [id_horneada], onDelete: NoAction, onUpdate: NoAction)
+  productos              productos? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model proveedores {
+  id_proveedor      Int               @id @default(autoincrement())
+  nombre            String            @db.VarChar(50)
+  id_tipo_documento Int?
+  documento         String?           @db.VarChar(20)
+  direccion         String?           @db.VarChar(50)
+  telefono          String?           @db.VarChar(20)
+  mail              String?           @db.VarChar(50)
+  compra            compra[]
+  tipos_documentos  tipos_documentos? @relation(fields: [id_tipo_documento], references: [id_tipo_documento], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model rol {
+  id_rol   Int        @id @default(autoincrement())
+  nombre   String     @db.VarChar(50)
+  usuarios usuarios[]
+}
+
+model tipos_documentos {
+  id_tipo_documento Int           @id @default(autoincrement())
+  tipo_documento    String        @db.VarChar(50)
+  proveedores       proveedores[]
+}
+
+model usuarios {
+  id_usuario Int     @id @default(autoincrement())
+  nombre     String  @db.VarChar(50)
+  mail       String  @db.VarChar(50)
+  password   String  @db.VarChar(50)
+  id_rol     Int?
+  rol        rol?    @relation(fields: [id_rol], references: [id_rol], onDelete: NoAction, onUpdate: NoAction)
+  venta      venta[]
+}
+
+model venta {
+  id_venta        Int               @id @default(autoincrement())
+  id_usuario      Int?
+  fecha           DateTime          @db.Date
+  seguimiento     String?           @db.VarChar(50)
+  detalles_ventas detalles_ventas[]
+  usuarios        usuarios?         @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+}
